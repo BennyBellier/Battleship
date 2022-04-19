@@ -1,28 +1,24 @@
 package model;
 
-import global.Configuration;
-
 public class GameMaster {
   int playerTurn;
+  int nbPlayer;
   PlayerSet p1, p2;
 
+
   /**
-   *  Initiate the game
-   * @param nop Number of player (1 o 2)
+   * Constructor for GameMaster.
+   * @param p1 The first player set.
+   * @param p2 The second player set.
    */
-  public GameMaster(int nop) {
-    p1 = new PlayerSet();
-    p2 = new PlayerSet();
-    p1.shipPlacement();
-    if(nop == 2) {
-      p2.shipPlacement();
-    }
-    else if (nop == 1) {
-      p2.randomShipPlacement();
-    }
-    else {
-      Configuration.instance().logger().warning("Game can only be play by one or two players");
-    }
+  public GameMaster(PlayerSet p1, PlayerSet p2) {
+    this.p1 = p1;
+    this.p2 = p2;
+    playerTurn = 1;
+  }
+
+  public void setNbPlayer(int nop) {
+    nbPlayer = nop;
   }
 
 }

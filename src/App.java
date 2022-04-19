@@ -1,18 +1,19 @@
 import global.Configuration;
-import model.GameMaster;
+import view.TerminalInterface;
 
 public class App {
     public static void main(String[] args) throws Exception {
-      switch (Configuration.instance().read("Lang")) {
-        case "fr":
-          System.out.println("Battaile Navale!");
+      switch (Configuration.instance().read("Interface")) {
+        case "Terminal":
+          TerminalInterface.start();
           break;
+        case "Graphic":
 
+          break;
         default:
-          System.out.println("Battleship!");
+          Configuration.instance().logger().severe("Interface not recognized");
           break;
       }
 
-      GameMaster gm = new GameMaster(1);
     }
 }

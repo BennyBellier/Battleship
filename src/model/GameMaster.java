@@ -13,12 +13,12 @@ public class GameMaster {
   public GameMaster(int nop) {
     p1 = new PlayerSet();
     p2 = new PlayerSet();
-    p1.randomShipPlacement();
+    p1.shipPlacement();
     if(nop == 2) {
       p2.shipPlacement();
     }
     else if (nop == 1) {
-      // Random placement
+      p2.randomShipPlacement();
     }
     else {
       Configuration.instance().logger().warning("Game can only be play by one or two players");

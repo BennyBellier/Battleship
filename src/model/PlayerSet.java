@@ -88,7 +88,6 @@ public class PlayerSet {
       for (int i = Math.min(p1, p2); i <= Math.max(p1, p2); i++) {
         if (verticaly) shipSet[i][cst] = ship; else shipSet[cst][i] = ship;
       }
-      System.out.println("ShipPlaced");
       return true;
     }
     return false;
@@ -214,6 +213,11 @@ public class PlayerSet {
     }
   }
 
+  /**
+   * Creates a copy of the given list.
+   * @param list the list to copy
+   * @return a copy of the list
+   */
   ArrayList<CaseType> duplicateList(ArrayList<CaseType> list) {
     ArrayList<CaseType> clone = new ArrayList<>();
     for (CaseType item : list) {
@@ -223,63 +227,166 @@ public class PlayerSet {
   }
 
   /**
+  * Asks the user to choose between manually filling the grid or choosing a random placement.
+  * @param scan The scanner used to get the user's input.
+  * @return The user's choice.
+   */
+  String userChoiceGeneration(Scanner scan) {
+    switch (Configuration.instance().lang()) {
+      case "fr":
+        System.out.println("\nVoulez-vous remplir la grille manuellement ou non ?\n1) Manuellement\t2) Choisir un placement aléatoire");
+        break;
+
+      default:
+        System.out.println("\nDo you want to fill the grid manually or not?\n1) Manually\t2) Choose a random placement");
+        break;
+    }
+
+    while (true) {
+      switch (Configuration.instance().lang()) {
+        case "fr":
+          System.out.print("Choix > ");
+          break;
+
+        default:
+          System.out.print("Choice > ");
+          break;
+      }
+      try {
+        String line = scan.nextLine();
+
+        if (Integer.parseInt(line) == 1)
+          return "manually";
+        else if (Integer.parseInt(line) == 2)
+          return "random";
+        else {
+          switch (Configuration.instance().lang()) {
+            case "fr":
+              System.out.println("Veuillez saisir une réponse correcte !");
+              break;
+
+            default:
+              System.out.println("Please enter a correct answer!");
+              break;
+          }
+        }
+      }
+      catch (Exception e) {
+        switch (Configuration.instance().lang()) {
+          case "fr":
+            System.out.println("Veuillez saisir une réponse correcte !");
+            break;
+
+          default:
+            System.out.println("Please enter a correct answer!");
+            break;
+        }
+      }
+    }
+  }
+
+  /**
    * Allows the user to place the ships on the board.
    */
   public void shipPlacement() {
-    ArrayList<CaseType> shipListSelector = duplicateList(shipAlive);
     Scanner scan = new Scanner(System.in);
-    while (nbShipAlive != shipAlive.size()) {
-      CaseType curShip = shipSelector(shipListSelector, scan);
+    String choice = userChoiceGeneration(scan);
 
-      // * first coords
-      int[] coords = userInputFirstPlacementCoords(curShip, scan);
-      int x1 = coords[0];
-      int y1 = coords[1];
+    if (choice.equals("random")) {
+      boolean usernotOk = true;
 
-      // * 2nd coords
-      switch (Configuration.instance().lang()) {
-        case "fr":
-          System.out.println(
-            "\nVeuillez saisir les coordonnées de l'autre extrémités du " +
-            curShip.fullName()
-          );
-          System.out.println(
-            "La taille du " +
-            curShip.fullName() +
-            " est de " +
-            curShip.ShipSize() +
-            " cases"
-          );
-          break;
-        default:
-          System.out.println(
-            "\nPlease enter the coordinates of the other end of " +
-            curShip.fullName()
-          );
-          System.out.println(
-            "the size of " +
-            curShip.fullName() +
-            " is " +
-            curShip.ShipSize() +
-            " squares"
-          );
-          break;
+      while (usernotOk) {
+        randomShipPlacement();
+        System.out.println(toString());
+
+        switch (Configuration.instance().lang()) {
+          case "fr":
+            System.out.print("Choississez vous ce modèle (O/n) ? ");
+            break;
+
+          default:
+            System.out.print("Do you choose this pattern (Y/n) ? ");
+            break;
+        }
+        String line = scan.nextLine();
+        if (line.equals("n") || line.equals("N")) {
+          resetShipSet();
+          usernotOk = true;
+        }
+        else
+          usernotOk = false;
       }
-      int x2 = -1, y2 = -1;
-
-      while (!setShip(curShip, x1, y1, x2, y2)) {
-        coords = userInputSecondPlacementCoords(curShip, scan, x1, y1);
-        x2 = coords[0];
-        y2 = coords[1];
-      }
-
-      shipListSelector.remove(curShip);
-      ++nbShipAlive;
-      System.out.println(toString());
     }
-    scan.close();
+    else {
+      ArrayList<CaseType> shipListSelector = duplicateList(shipAlive);
+      while (nbShipAlive != shipAlive.size()) {
+        CaseType curShip = shipSelector(shipListSelector, scan);
+
+        // * first coords
+        int[] coords = userInputFirstPlacementCoords(curShip, scan);
+        int x1 = coords[0];
+        int y1 = coords[1];
+
+        // * 2nd coords
+        switch (Configuration.instance().lang()) {
+          case "fr":
+            System.out.println(
+              "\nVeuillez saisir les coordonnées de l'autre extrémités du " +
+              curShip.fullName()
+            );
+            System.out.println(
+              "La taille du " +
+              curShip.fullName() +
+              " est de " +
+              curShip.ShipSize() +
+              " cases"
+            );
+            break;
+          default:
+            System.out.println(
+              "\nPlease enter the coordinates of the other end of " +
+              curShip.fullName()
+            );
+            System.out.println(
+              "the size of " +
+              curShip.fullName() +
+              " is " +
+              curShip.ShipSize() +
+              " squares"
+            );
+            break;
+        }
+        int x2 = -1, y2 = -1;
+
+        while (!setShip(curShip, x1, y1, x2, y2)) {
+          coords = userInputSecondPlacementCoords(curShip, scan, x1, y1);
+          x2 = coords[0];
+          y2 = coords[1];
+        }
+
+        shipListSelector.remove(curShip);
+        ++nbShipAlive;
+        System.out.println(toString());
+      }
+      scan.close();
+    }
   }
 
+  /**
+  * Resets the ship set to null.
+   */
+  void resetShipSet() {
+    for (int i = 0; i < 10; i++) {
+      for (int j = 0; j < 10; j++) {
+        shipSet[i][j] = null;
+      }
+    }
+    nbShipAlive = 0;
+  }
+
+  /**
+  * Randomly places the ships on the grid.
+   */
   public void randomShipPlacement() {
     Random rand = new Random();
     ArrayList<CaseType> shipListSelector = duplicateList(shipAlive);
@@ -334,7 +441,6 @@ public class PlayerSet {
       }
       shipListSelector.remove(ship);
       ++nbShipAlive;
-      System.out.println(toString());
     }
   }
 
@@ -365,6 +471,11 @@ public class PlayerSet {
 
     int x = -1, y = -1;
     while (!coordInGrid(x, y)) {
+      /**
+       * Converts a line of text to an array of coordinates.
+       * @param line The line of text to convert.
+       * @return The array of coordinates.
+       */
       int[] coords = lineToCoords(scan);
       x = coords[0];
       y = coords[1];

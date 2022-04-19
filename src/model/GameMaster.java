@@ -13,9 +13,9 @@ public class GameMaster {
   public GameMaster(int nop) {
     p1 = new PlayerSet();
     p2 = new PlayerSet();
-    p1.shipPlacement();
+    p1.randomShipPlacement();
     if(nop == 2) {
-      // player palce ship
+      p2.shipPlacement();
     }
     else if (nop == 1) {
       // Random placement

@@ -1,15 +1,19 @@
 package model;
 
-import java.util.Scanner;
-
 import global.Configuration;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Random;
+import java.util.Scanner;
+
 public class PlayerSet {
+
   private CaseType[][] shipSet;
   private CaseType[][] ennemySet;
   int nbShipAlive;
-  CaseType[] shipAlive = { CaseType.AIRCRAFTCARRIER, CaseType.BATTLESHIP, CaseType.CRUISER, CaseType.SUBMARINE,
-      CaseType.DESTROYER, CaseType.DESTROYER, CaseType.AIRCRAFT, CaseType.AIRCRAFT };
+  ArrayList<CaseType> shipAlive = new ArrayList<>(Arrays.asList(CaseType.AIRCRAFTCARRIER, CaseType.BATTLESHIP, CaseType.CRUISER, CaseType.SUBMARINE, CaseType.DESTROYER, CaseType.DESTROYER, CaseType.AIRCRAFT, CaseType.AIRCRAFT));
 
   /**
    * Constructor of the PlayerSet class.
@@ -53,21 +57,36 @@ public class PlayerSet {
     if ((Math.abs(p2 - p1) + 1) != ship.ShipSize()) {
       switch (Configuration.instance().lang()) {
         case "fr":
-          System.out.println("Les coordonnées ne correspondent pas à la taille du bateau !");
+          System.out.println(
+            "Les coordonnées ne correspondent pas à la taille du bateau !"
+          );
           return false;
-
         default:
-          System.out.println("The coordinates do not correspond to the size of the warship!");
+          System.out.println(
+            "The coordinates do not correspond to the size of the warship!"
+          );
           return false;
       }
     }
+    if (!noSuperPosShip(cst, p1, p2, verticaly)) {
+      switch (Configuration.instance().lang()) {
+        case "fr":
+          System.out.println(
+            "Un bateaux se situe déjà à cette endroit !"
+          );
+          return false;
+        default:
+          System.out.println(
+            "A warship is already located at this place!"
+          );
+          return false;
+      }
+    }
+
     if ((Math.abs(p2 - p1) + 1) == ship.ShipSize() && coordInGrid(p1, p2)) {
       // Place the ship on the grid
       for (int i = Math.min(p1, p2); i <= Math.max(p1, p2); i++) {
-        if (verticaly)
-          shipSet[i][cst] = ship;
-        else
-          shipSet[cst][i] = ship;
+        if (verticaly) shipSet[i][cst] = ship; else shipSet[cst][i] = ship;
       }
       System.out.println("ShipPlaced");
       return true;
@@ -87,6 +106,28 @@ public class PlayerSet {
   }
 
   /**
+  * Checks if there is a ship at the given coordinates.
+  * @param cst the column of the ship's head
+  * @param p1 the row of the ship's head
+  * @param p2 the row of the ship's tail
+  * @param verticaly whether the ship is vertical or not
+  * @return whether there is a ship at the given coordinates.
+   */
+  boolean noSuperPosShip(int cst, int p1, int p2, boolean verticaly) {
+    for (int i = Math.min(p1, p2); i <= Math.max(p1, p2); i++) {
+      if (verticaly) {
+        if (shipSet[i][cst] != null)
+          return false;
+      }
+      else {
+        if (shipSet[cst][i] != null)
+          return false;
+      }
+    }
+    return true;
+  }
+
+  /**
    * Returns the type of ship at the given coordinates.
    *
    * @param x The x coordinate of the ship.
@@ -95,6 +136,22 @@ public class PlayerSet {
    */
   public CaseType isShip(int x, int y) {
     return shipSet[x][y];
+  }
+
+  /**
+   * Returns whether all the ships are sunk.
+   * @return whether all the ships are sunk.
+   */
+  public boolean isAllShipSunk() {
+    return nbShipAlive == 0;
+  }
+
+  /**
+   * Returns the number of ships still alive.
+   * @return the number of ships still alive.
+   */
+  public int nbShipStillAlive() {
+    return nbShipAlive;
   }
 
   /**
@@ -107,7 +164,9 @@ public class PlayerSet {
     try {
       shipSet[y][x] = shipSet[y][x].hited();
     } catch (NullPointerException e) {
-      throw new NullPointerException("There is no ship at position (" + x + ", " + y + ")");
+      throw new NullPointerException(
+        "There is no ship at position (" + x + ", " + y + ")"
+      );
     }
   }
 
@@ -155,10 +214,21 @@ public class PlayerSet {
     }
   }
 
+  ArrayList<CaseType> duplicateList(ArrayList<CaseType> list) {
+    ArrayList<CaseType> clone = new ArrayList<>();
+    for (CaseType item : list) {
+      clone.add(item);
+    }
+    return clone;
+  }
+
+  /**
+   * Allows the user to place the ships on the board.
+   */
   public void shipPlacement() {
-    CaseType[] shipListSelector = shipAlive.clone();
+    ArrayList<CaseType> shipListSelector = duplicateList(shipAlive);
     Scanner scan = new Scanner(System.in);
-    while (nbShipAlive != shipAlive.length) {
+    while (nbShipAlive != shipAlive.size()) {
       CaseType curShip = shipSelector(shipListSelector, scan);
 
       // * first coords
@@ -169,13 +239,30 @@ public class PlayerSet {
       // * 2nd coords
       switch (Configuration.instance().lang()) {
         case "fr":
-          System.out.println("\nVeuillez saisir les coordonnées de l'autre extrémités du " + curShip.fullName());
-          System.out.println("La taille du " + curShip.fullName() + " est de " + curShip.ShipSize() + " cases");
+          System.out.println(
+            "\nVeuillez saisir les coordonnées de l'autre extrémités du " +
+            curShip.fullName()
+          );
+          System.out.println(
+            "La taille du " +
+            curShip.fullName() +
+            " est de " +
+            curShip.ShipSize() +
+            " cases"
+          );
           break;
-
         default:
-          System.out.println("\nPlease enter the coordinates of the other end of " + curShip.fullName());
-          System.out.println("the size of " + curShip.fullName() + " is " + curShip.ShipSize() + " squares");
+          System.out.println(
+            "\nPlease enter the coordinates of the other end of " +
+            curShip.fullName()
+          );
+          System.out.println(
+            "the size of " +
+            curShip.fullName() +
+            " is " +
+            curShip.ShipSize() +
+            " squares"
+          );
           break;
       }
       int x2 = -1, y2 = -1;
@@ -186,36 +273,69 @@ public class PlayerSet {
         y2 = coords[1];
       }
 
-      shipListSelector = reduceShipListSelector(shipListSelector, curShip);
-
+      shipListSelector.remove(curShip);
       ++nbShipAlive;
       System.out.println(toString());
     }
     scan.close();
   }
 
-  /**
-   * Reduces the list of ships by one, by removing the ship that was just
-   * selected.
-   *
-   * @param ships the list of ships to reduce.
-   * @param ship  the ship that was just selected.
-   * @return the reduced list of ships.
-   */
-  CaseType[] reduceShipListSelector(CaseType[] ships, CaseType ship) {
-    boolean reduce = false;
-    for (int i = 0; i < ships.length; i++) {
-      if (reduce) {
-        if (i < ships.length - 1)
-          ships[i] = ships[i + 1];
-        else
-          ships[i] = null;
-      } else if (ships[i] == ship) {
-        ships[i] = ships[i + 1];
-        reduce = true;
+  public void randomShipPlacement() {
+    Random rand = new Random();
+    ArrayList<CaseType> shipListSelector = duplicateList(shipAlive);
+    boolean coordsCorrect;
+
+    while (nbShipAlive != shipAlive.size()) {
+      CaseType ship = shipListSelector.get(rand.nextInt(shipListSelector.size()));
+      coordsCorrect = false;
+
+      while (!coordsCorrect) {
+        //* first coords
+        int x1 = rand.nextInt(10);
+        int y1 = rand.nextInt(10);
+
+        int orientation = rand.nextInt(4);
+        int x2 = -1, y2 = -1;
+
+        switch (orientation) {
+          case 0:
+            y2 = y1 - (ship.ShipSize() - 1);
+            if (coordInGrid(x1, y2) && noSuperPosShip(x1, y1, y2, true)) {
+              if (setShip(ship, x1, y1, x1, y2)) {
+                coordsCorrect = true;
+              }
+            }
+            break;
+          case 1:
+            x2 = x1 + (ship.ShipSize() - 1);
+            if (coordInGrid(x2, y1) && noSuperPosShip(y1, x1, x2, false)) {
+              if (setShip(ship, x1, y1, x2, y1)) {
+                coordsCorrect = true;
+              }
+            }
+            break;
+          case 2:
+            y2 = y1 + (ship.ShipSize() - 1);
+            if (coordInGrid(x1, y2) && noSuperPosShip(x1, y1, y2, true)) {
+              if (setShip(ship, x1, y1, x1, y2)) {
+                coordsCorrect = true;
+              }
+            }
+            break;
+          case 3:
+            x2 = x1 - (ship.ShipSize() - 1);
+            if (coordInGrid(x2, y1) && noSuperPosShip(y1, x1, x2, false)) {
+              if (setShip(ship, x1, y1, x2, y1)) {
+                coordsCorrect = true;
+              }
+            }
+            break;
+        }
       }
+      shipListSelector.remove(ship);
+      ++nbShipAlive;
+      System.out.println(toString());
     }
-    return ships;
   }
 
   /**
@@ -226,16 +346,20 @@ public class PlayerSet {
    * @return The coordinates of the first placement of the ship.
    */
   int[] userInputFirstPlacementCoords(CaseType ship, Scanner scan) {
-    // display text
     switch (Configuration.instance().lang()) {
       case "fr":
-        System.out.println("\nVeuillez saisir les coordonnées de l'une des extrémités de la position du"
-            + ship.fullName() + " (saisissez la lettre puis le numéro comme suivant: \"H5\")");
+        System.out.println(
+          "\nVeuillez saisir les coordonnées de l'une des extrémités de la position du" +
+          ship.fullName() +
+          " (saisissez la lettre puis le numéro comme suivant: \"H5\")"
+        );
         break;
-
       default:
-        System.out.println("\nPlease enter the coordinates of one end of " + ship.fullName()
-            + " position (enter the letter and then the number as follows: \"H5\")");
+        System.out.println(
+          "\nPlease enter the coordinates of one end of " +
+          ship.fullName() +
+          " position (enter the letter and then the number as follows: \"H5\")"
+        );
         break;
     }
 
@@ -245,10 +369,23 @@ public class PlayerSet {
       x = coords[0];
       y = coords[1];
     }
-    return new int[] {x, y};
+    return new int[] { x, y };
   }
 
-  int[] userInputSecondPlacementCoords(CaseType ship, Scanner scan, int x1, int y1) {
+  /**
+   * Reads the user input for the placement of a ship.
+   * @param ship The ship to place.
+   * @param scan The scanner to read the user input.
+   * @param x1 The x coordinate of the first cell of the ship.
+   * @param y1 The y coordinate of the first cell of the ship.
+   * @return The coordinates of the second cell of the ship.
+   */
+  int[] userInputSecondPlacementCoords(
+    CaseType ship,
+    Scanner scan,
+    int x1,
+    int y1
+  ) {
     int x, y;
     int[] coords = lineToCoords(scan);
     x = coords[0];
@@ -261,14 +398,15 @@ public class PlayerSet {
     if (x != x1 && y != y1) {
       switch (Configuration.instance().lang()) {
         case "fr":
-          System.out.println("Les bateaux ne peuvent pas être placé en diagonales !");
+          System.out.println(
+            "Les bateaux ne peuvent pas être placé en diagonales !"
+          );
           break;
-
         default:
           System.out.println("Boats cannot be placed diagonally!");
           break;
       }
-      return new int[] {-1, -1};
+      return new int[] { -1, -1 };
     }
     return coords;
   }
@@ -293,10 +431,9 @@ public class PlayerSet {
 
       // Get x coordinate
       if (Integer.parseInt(line.charAt(1) + "") == 1) {
-        if (line.length() == 3 && Integer.parseInt(line.charAt(2) + "") == 0) // if user type text like 'A10'
-          x = 9;
-        else if (line.length() == 2)
-          x = 1;
+        if (
+          line.length() == 3 && Integer.parseInt(line.charAt(2) + "") == 0
+        ) x = 9; else if (line.length() == 2) x = 1; // if user type text like 'A10'
       }
       if (line.length() == 2) { // if user type text like 'H5'
         x = Integer.parseInt(line.charAt(1) + "") - 1;
@@ -308,67 +445,64 @@ public class PlayerSet {
           case "fr":
             System.out.println("Les coordonnées sont hors de la grille !");
             break;
-
           default:
             System.out.println("Coordinates are outside the grid!");
             break;
         }
-        return new int[] {-1, -1};
+        return new int[] { -1, -1 };
       }
     } catch (Exception e) { // if user input isn't correct
       switch (Configuration.instance().lang()) {
         case "fr":
           System.out.println("Veuillez saisir des coordonnées correctes !");
           break;
-
         default:
           System.out.println("Please enter correct cordinates !");
           break;
       }
-      return new int[] {-1, -1};
+      return new int[] { -1, -1 };
     }
 
-    return new int[] {x, y};
+    return new int[] { x, y };
   }
+
 
   /**
    * Selects a ship from a list of ships.
-   *
-   * @param ships The list of ships to choose from.
-   * @param scan  The scanner to use.
+   * @param ships The list of ships to select from.
+   * @param scan The scanner to use to get the user input.
    * @return The selected ship.
    */
-  CaseType shipSelector(CaseType[] ships, Scanner scan) {
-    int i;
+  CaseType shipSelector(ArrayList<CaseType> ships, Scanner scan) {
+    int i = 1;
+    Iterator<CaseType> it = ships.iterator();
 
     switch (Configuration.instance().lang()) {
       case "fr":
         System.out.println("\nListe des batiments à placer");
         break;
-
       default:
         System.out.println("\nList of warships to place");
         break;
     }
-
     // Display of the ships name and the number of ships reamaining to be placed
-    for (i = 1; i <= ships.length - nbShipAlive; i++) {
-      System.out.print(i + ") " + ships[i - 1].fullName() + "\t");
-      if (i != 0 && i % 3 == 0) {
+    while (it.hasNext()) {
+      System.out.print(i + ") " + it.next().fullName() + "\t");
+      if (i % 3 == 0) {
         System.out.println();
       }
+      ++i;
     }
 
     if (i % 3 != 0) {
       System.out.println("");
     }
     int shipNumber = 0;
-    while (shipNumber < 1 || shipNumber > ships.length - nbShipAlive) {
+    while (shipNumber < 1 || shipNumber > ships.size() - nbShipAlive) {
       switch (Configuration.instance().lang()) {
         case "fr":
           System.out.print("\nEntrez un numéro > ");
           break;
-
         default:
           System.out.print("\nSelect ship number > ");
           break;
@@ -377,12 +511,13 @@ public class PlayerSet {
         String line = scan.nextLine();
         shipNumber = Integer.parseInt(line);
 
-        if (shipNumber < 1 || shipNumber > ships.length) {
+        if (shipNumber < 1 || shipNumber > ships.size()) {
           switch (Configuration.instance().lang()) {
             case "fr":
-              System.out.println("Selectionnez un numéro présent dans la liste ci-dessus !");
+              System.out.println(
+                "Selectionnez un numéro présent dans la liste ci-dessus !"
+              );
               break;
-
             default:
               System.out.println("Please enter a number in the list above!");
               break;
@@ -391,9 +526,10 @@ public class PlayerSet {
       } catch (Exception e) {
         switch (Configuration.instance().lang()) {
           case "fr":
-            System.out.println("Selectionnez un numéro présent dans la liste ci-dessus !");
+            System.out.println(
+              "Selectionnez un numéro présent dans la liste ci-dessus !"
+            );
             break;
-
           default:
             System.out.println("Please enter a number in the list above!");
             break;
@@ -402,7 +538,7 @@ public class PlayerSet {
       }
     }
 
-    CaseType shipSelected = ships[shipNumber - 1];
+    CaseType shipSelected = ships.get(shipNumber - 1);
     return shipSelected;
   }
 
@@ -434,7 +570,6 @@ public class PlayerSet {
         return 8;
       case 'J':
         return 9;
-
       default:
         return -1;
     }
@@ -468,7 +603,6 @@ public class PlayerSet {
         return " I |";
       case 9:
         return " J |";
-
       default:
         return " Z |";
     }
@@ -484,10 +618,14 @@ public class PlayerSet {
    */
   public String toString() {
     StringBuilder build = new StringBuilder();
-    build.append("+---+---+---+---+---+---+---+---+---+---+---+ +---+---+---+---+---+---+---+---+---+---+---+\n"
-        + "|   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10| |   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10|\n");
+    build.append(
+      "+---+---+---+---+---+---+---+---+---+---+---+ +---+---+---+---+---+---+---+---+---+---+---+\n" +
+      "|   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10| |   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10|\n"
+    );
     for (int i = 0; i < 10; i++) {
-      build.append("+---+---+---+---+---+---+---+---+---+---+---+ +---+---+---+---+---+---+---+---+---+---+---+\n|");
+      build.append(
+        "+---+---+---+---+---+---+---+---+---+---+---+ +---+---+---+---+---+---+---+---+---+---+---+\n|"
+      );
 
       for (int j = -1; j < 10; j++) {
         if (j == -1) {
@@ -510,14 +648,18 @@ public class PlayerSet {
           if (shipSet[i][k] == null) {
             build.append("   |");
           } else {
-            build.append(ANSI_GREEN + shipSet[i][k].toString() + ANSI_RESET + "|");
+            build.append(
+              ANSI_GREEN + shipSet[i][k].toString() + ANSI_RESET + "|"
+            );
           }
         }
       }
 
       build.append("\n");
     }
-    build.append("+---+---+---+---+---+---+---+---+---+---+---+ +---+---+---+---+---+---+---+---+---+---+---+\n");
+    build.append(
+      "+---+---+---+---+---+---+---+---+---+---+---+ +---+---+---+---+---+---+---+---+---+---+---+\n"
+    );
     return build.toString();
   }
 }
